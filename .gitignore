@@ -1,0 +1,6 @@
+build/
+dist/
+lsa.egg-info/
+lsa/lsa_version.py
+test/ARISA20.mix.lsa
+test/ARISA20.theo.lsa
