@@ -128,9 +128,16 @@ PBS_PREAMBLE = """#!/bin/bash
 ## Dropped PBS -S and PBS -j oe because these are handled differently in slurm  
 #SBATCH -o %s
 #SBATCH -t 0-299:00:00 # set to 299 hours may want to change depending on job limits in system
-#SBATCH -ntasks=1
-#SBATCH -cpus-per-task=1
-#SBATCH -mem=%d000M"""
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=%d000M
+## Activate conda environment
+## Note: you may need to do something different here depending on how your HPC handles conda
+## For example you may need to load an anaconda module before sourcing the base environment for example:
+## module load anaconda/py3
+module load anaconda/colsa
+source $(conda info --base)/etc/profile.d/conda.sh # activates base environment
+conda activate elsa_env_v0.1"""
 vmem=12
 
 def gen_pbs(singleFile, singleCmd, workDir, singleEnd, vmem):
@@ -140,7 +147,7 @@ def gen_pbs(singleFile, singleCmd, workDir, singleEnd, vmem):
   print >>singlePBS, "cd %s" % workDir
   print >>singlePBS, singleCmd % (singleFile, singleResult)
   print >>singlePBS, "touch %s" % singleEnd
-  print >>singlePBS, "rm -f %s %s" % (singleFile, singlePBS.name)
+  #print >>singlePBS, "rm -f %s %s" % (singleFile, singlePBS.name)
   singlePBS.close()
   return singlePBS.name
 
