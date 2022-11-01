@@ -147,7 +147,7 @@ def gen_pbs(singleFile, singleCmd, workDir, singleEnd, vmem):
   print >>singlePBS, "cd %s" % workDir
   print >>singlePBS, singleCmd % (singleFile, singleResult)
   print >>singlePBS, "touch %s" % singleEnd
-  #print >>singlePBS, "rm -f %s %s" % (singleFile, singlePBS.name)
+  print >>singlePBS, "rm -f %s %s" % (singleFile, singlePBS.name)
   singlePBS.close()
   return singlePBS.name
 
@@ -164,8 +164,11 @@ def gen_output(multiOutput, resultFiles):
 
 def ssa_pbs(singlePBS):
   try:
+    #tmp=subprocess.Popen("ssa.py", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+    #print >>sys.stderr, tmp
     tmp=subprocess.Popen("ssa.py %s" % singlePBS, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
     print >>sys.stderr, "submitted", singlePBS
+    #print >>sys.stderr, tmp
   except ValueError:
     quit()
   return tmp[0]
@@ -209,7 +212,7 @@ def main():
     endFile=endFiles.pop()
     pbsFile=gen_pbs(singleFile, singleCmd, workDir, endFile, vmem)
     inProgress.add(endFile)
-    print >>sys.stderr, pbsFile
+    #print >>sys.stderr, pbsFile
     if dryRun=='':
       ssa_pbs(pbsFile)
   if dryRun!='':
