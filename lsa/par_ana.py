@@ -124,18 +124,19 @@ def gen_singles(multiInput, multiOutput, workDir):
   return list(reversed(singles)), list(reversed(results)), list(reversed(ends))
 
 PBS_PREAMBLE = """#!/bin/bash
-#PBS -N %s 
-#PBS -S /bin/bash 
-#PBS -j oe
-#PBS -o %s
-#PBS -l walltime=299:00:00
-#PBS -l nodes=1:ppn=1,mem=%d000mb,vmem=%d000mb,pmem=%d000mb"""
+#SBATCH --job-name=%s 
+## Dropped PBS -S and PBS -j oe because these are handled differently in slurm  
+#SBATCH -o %s
+#SBATCH -t 0-299:00:00 # set to 299 hours may want to change depending on job limits in system
+#SBATCH -ntasks=1
+#SBATCH -cpus-per-task=1
+#SBATCH -mem=%d000M"""
 vmem=12
 
 def gen_pbs(singleFile, singleCmd, workDir, singleEnd, vmem):
   singleResult=singleFile+".tmp"
-  singlePBS=open(singleFile+".pbs", "w")
-  print >>singlePBS, PBS_PREAMBLE % (os.path.basename(singleFile), os.path.basename(singleFile)+".log", vmem, vmem, vmem)
+  singlePBS=open(singleFile+".slurm", "w")
+  print >>singlePBS, PBS_PREAMBLE % (os.path.basename(singleFile), os.path.basename(singleFile)+".log", vmem)
   print >>singlePBS, "cd %s" % workDir
   print >>singlePBS, singleCmd % (singleFile, singleResult)
   print >>singlePBS, "touch %s" % singleEnd
@@ -171,7 +172,7 @@ def main():
   parser.add_argument("singleCmd", metavar="singleCmd", help="single line command line in quotes")
   parser.add_argument("workDir", metavar="workDir", help="set current working directory")
   parser.add_argument("-m", "--maxMem", dest="maxMem", default=12, type=int, help="max memory per process in MB")
-  parser.add_argument("-d", "--dryRun", dest="dryRun", default="", help="generate pbs only")
+  parser.add_argument("-d", "--dryRun", dest="dryRun", default="", help="generate slurm files only")
 
 #  """par_ana ARISA.txt ARISA.la 'la_compute %s ARISA.laq %s -s 114 -r 1 -p 1000'"""
 #  """par_ana ARISA.txt ARISA.lsa 'lsa_compute %s %s -s 114 -r -p theo'"""
@@ -186,7 +187,7 @@ def main():
   print >>sys.stderr, "vmem=", str(vmem)+"000mb"
   #ws=os.path.join(os.environ.get("HOME"),'tmp','multi')
   print >>sys.stderr, "workDir=", workDir
-  print >>sys.stderr, """Note: if deadlocked with unfinished jobs finally, manually collect the corresponding pbs files in above path and run"""
+  print >>sys.stderr, """Note: if deadlocked with unfinished jobs finally, manually collect the corresponding slurm files in above path and run"""
 
   singleFiles,resultFiles,endFiles=gen_singles(multiInput,multiOutput,workDir)
   #print >>sys.stderr, singleFiles,resultFiles,endFiles
